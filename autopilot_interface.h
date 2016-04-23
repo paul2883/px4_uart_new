@@ -204,6 +204,8 @@ struct Mavlink_Messages {
 	// Attitude
 	mavlink_attitude_t attitude;
 
+    //mission count
+    mavlink_mission_count_t mission_count;
 	// System Parameters?
 
 
@@ -271,7 +273,12 @@ public:
 	void start_write_thread(void);
 
 	void handle_quit( int sig );
-
+    /**********customed*****/
+    int arm_disarm(bool flag);    //arm or disarm the quad
+    int take_off(bool flag);
+    int set_nav_waypoint(bool flag, u_int64_t latitude, u_int64_t longitude, u_int64_t altitude);
+    int enable_automode(bool flag);
+    /***********************/
 
 private:
 

@@ -1,0 +1,12 @@
+.
+mavlink/include/mavlink/v1.0
+mavlink/include/mavlink/v1.0/ardupilotmega
+mavlink/include/mavlink/v1.0/ASLUAV
+mavlink/include/mavlink/v1.0/autoquad
+mavlink/include/mavlink/v1.0/common
+mavlink/include/mavlink/v1.0/matrixpilot
+mavlink/include/mavlink/v1.0/minimal
+mavlink/include/mavlink/v1.0/pixhawk
+mavlink/include/mavlink/v1.0/slugs
+mavlink/include/mavlink/v1.0/test
+mavlink/include/mavlink/v1.0/ualberta

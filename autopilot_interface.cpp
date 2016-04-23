@@ -226,7 +226,61 @@ update_setpoint(mavlink_set_position_target_local_ned_t setpoint)
 	current_setpoint = setpoint;
 }
 
+// ------------------------------------------------------------------------------
+//   Arm or disarm the quad
+// ------------------------------------------------------------------------------
+int
+Autopilot_Interface::
+arm_disarm(bool flag)
+{
+    // Prepare command for off-board mode
+    mavlink_command_long_t com = { 0 };
+    com.target_system    = system_id;
+    com.target_component = autopilot_id;
+    com.command          = MAV_CMD_COMPONENT_ARM_DISARM;
+    com.confirmation     = true;
+    com.param1           = (float) flag; // flag >0.5 => start, <0.5 => stop
 
+    // Encode
+    mavlink_message_t message;
+    mavlink_msg_command_long_encode(system_id, companion_id, &message, &com);
+
+    // Send the message
+    int len = serial_port->write_message(message);
+
+    // Done!
+    return len;
+}
+
+
+// ------------------------------------------------------------------------------
+//   take_off
+// ------------------------------------------------------------------------------
+int
+Autopilot_Interface::
+take_off(bool flag)
+{
+    // Prepare command for off-board mode
+    mavlink_command_long_t com = { 0 };
+    com.target_system    = system_id;
+    com.target_component = autopilot_id;
+    com.command          = MAV_CMD_NAV_TAKEOFF;
+    com.confirmation     = true;
+    //com.param1           = (float) flag; // flag >0.5 => start, <0.5 => stop
+    //com.param5             =0;
+    //com.param6             =0;
+    com.param7             =10;
+
+    // Encode
+    mavlink_message_t message;
+    mavlink_msg_command_long_encode(system_id, companion_id, &message, &com);
+
+    // Send the message
+    int len = serial_port->write_message(message);
+
+    // Done!
+    return len;
+}
 // ------------------------------------------------------------------------------
 //   Read Messages
 // ------------------------------------------------------------------------------
@@ -547,6 +601,64 @@ toggle_offboard_control( bool flag )
 	return len;
 }
 
+
+// ------------------------------------------------------------------------------
+//   Set nav waypoint
+// ------------------------------------------------------------------------------
+int
+Autopilot_Interface::
+set_nav_waypoint( bool flag, u_int64_t latitude, u_int64_t longitude, u_int64_t altitude )
+{
+    // Prepare command for off-board mode
+    mavlink_command_long_t com = { 0 };
+    com.target_system    = system_id;
+    com.target_component = autopilot_id;
+    com.command          = MAV_CMD_NAV_WAYPOINT;
+    com.confirmation     = true;
+    com.param1           = 100; // flag >0.5 => start, <0.5 => stop
+    com.param2           = 5; //triger radius/m
+    com.param5           = latitude;
+    com.param6           = longitude;
+    com.param7           = altitude;
+    // Encode
+    mavlink_message_t message;
+    mavlink_msg_command_long_encode(system_id, companion_id, &message, &com);
+
+    // Send the message
+    int len = serial_port->write_message(message);
+
+    // Done!
+    return len;
+}
+
+// ------------------------------------------------------------------------------
+//   Enable auto mode
+// ------------------------------------------------------------------------------
+int
+Autopilot_Interface::
+enable_automode( bool flag)
+{
+//    // Prepare command for off-board mode
+//    mavlink_command_long_t com = { 0 };
+//    com.target_system    = system_id;
+//    com.target_component = autopilot_id;
+//    com.command          = MAV_CMD_NAV_WAYPOINT;
+//    com.confirmation     = true;
+//    com.param1           = 100; // flag >0.5 => start, <0.5 => stop
+//    com.param2           = 5; //triger radius/m
+//    com.param5           = latitude;
+//    com.param6           = longitude;
+//    com.param7           = altitude;
+//    // Encode
+//    mavlink_message_t message;
+//    mavlink_msg_command_long_encode(system_id, companion_id, &message, &com);
+
+//    // Send the message
+//    int len = serial_port->write_message(message);
+
+//    // Done!
+    return 0;
+}
 
 // ------------------------------------------------------------------------------
 //   STARTUP

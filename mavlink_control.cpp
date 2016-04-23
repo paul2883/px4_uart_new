@@ -54,7 +54,7 @@
 // ------------------------------------------------------------------------------
 
 #include "mavlink_control.h"
-
+#include <iomanip>
 
 // ------------------------------------------------------------------------------
 //   TOP
@@ -75,9 +75,13 @@ top (int argc, char **argv)
 #endif
 	int baudrate = 57600;
 
-	// do the parse, will throw an int if it fails
-	parse_commandline(argc, argv, uart_name, baudrate);
+    long latitude=0;
+    long longitude=0;
+    long altitude=0;
 
+	// do the parse, will throw an int if it fails
+    parse_commandline(argc, argv, uart_name, baudrate, &latitude, &longitude, &altitude );
+    cout<<setprecision(4)<<latitude<<"\n";
 
 	// --------------------------------------------------------------------------
 	//   PORT and THREAD STARTUP
@@ -140,7 +144,7 @@ top (int argc, char **argv)
 	/*
 	 * Now we can implement the algorithm we want on top of the autopilot interface
 	 */
-	commands(autopilot_interface);
+    commands(autopilot_interface,&latitude,&longitude,&altitude);
 
 
 	// --------------------------------------------------------------------------
@@ -169,15 +173,15 @@ top (int argc, char **argv)
 // ------------------------------------------------------------------------------
 
 void
-commands(Autopilot_Interface &api)
+commands(Autopilot_Interface &api, long *latitude, long *longitude, long *altitude)
 {
 
 	// --------------------------------------------------------------------------
 	//   START OFFBOARD MODE
 	// --------------------------------------------------------------------------
 
-	api.enable_offboard_control();
-	usleep(100); // give some time to let it sink in
+    //api.enable_offboard_control();
+    //usleep(100); // give some time to let it sink in
 
 	// now the autopilot is accepting setpoint commands
 
@@ -185,11 +189,11 @@ commands(Autopilot_Interface &api)
 	// --------------------------------------------------------------------------
 	//   SEND OFFBOARD COMMANDS
 	// --------------------------------------------------------------------------
-	printf("SEND OFFBOARD COMMANDS\n");
+    //printf("SEND OFFBOARD COMMANDS\n");
 
 	// initialize command data strtuctures
-	mavlink_set_position_target_local_ned_t sp;
-	mavlink_set_position_target_local_ned_t ip = api.initial_position;
+    //mavlink_set_position_target_local_ned_t sp;
+    //mavlink_set_position_target_local_ned_t ip = api.initial_position;
 
 	// autopilot_interface.h provides some helper functions to build the command
 
@@ -201,39 +205,42 @@ commands(Autopilot_Interface &api)
 //				   sp        );
 
 	// Example 2 - Set Position
-	 set_position( ip.x - 5.0 , // [m]
-			 	   ip.y - 5.0 , // [m]
-				   ip.z       , // [m]
-				   sp         );
+//	 set_position( ip.x - 5.0 , // [m]
+//			 	   ip.y - 5.0 , // [m]
+//				   ip.z       , // [m]
+//				   sp         );
 
 
 	// Example 1.2 - Append Yaw Command
-	set_yaw( ip.yaw , // [rad]
-			 sp     );
+//	set_yaw( ip.yaw , // [rad]
+//			 sp     );
 
 	// SEND THE COMMAND
-	api.update_setpoint(sp);
+//	api.update_setpoint(sp);
 	// NOW pixhawk will try to move
 
 	// Wait for 8 seconds, check position
-	for (int i=0; i < 8; i++)
-	{
-		mavlink_local_position_ned_t pos = api.current_messages.local_position_ned;
-		printf("%i CURRENT POSITION XYZ = [ % .4f , % .4f , % .4f ] \n", i, pos.x, pos.y, pos.z);
-		sleep(1);
-	}
+//	for (int i=0; i < 8; i++)
+//	{
+//		mavlink_local_position_ned_t pos = api.current_messages.local_position_ned;
+//		printf("%i CURRENT POSITION XYZ = [ % .4f , % .4f , % .4f ] \n", i, pos.x, pos.y, pos.z);
+//		sleep(1);
+//	}
 
-	printf("\n");
+//	printf("\n");
 
 
 	// --------------------------------------------------------------------------
 	//   STOP OFFBOARD MODE
 	// --------------------------------------------------------------------------
 
-	api.disable_offboard_control();
+    //api.disable_offboard_control();
 
 	// now pixhawk isn't listening to setpoint commands
 
+    api.set_nav_waypoint(true, *latitude, *longitude, *altitude);
+    cout<<setprecision(4)<<*altitude<<'\n';
+   // printf("%f,%f,%f\n",,*longitude,*altitude);
 
 	// --------------------------------------------------------------------------
 	//   GET A MESSAGE
@@ -258,7 +265,7 @@ commands(Autopilot_Interface &api)
 	printf("    baro:        %f (mBar) \n"  , imu.abs_pressure);
 	printf("    altitude:    %f (m) \n"     , imu.pressure_alt);
 	printf("    temperature: %f C \n"       , imu.temperature );
-
+    printf("mission count=%d",messages.mission_count);
 	printf("\n");
 
 
@@ -276,7 +283,7 @@ commands(Autopilot_Interface &api)
 // ------------------------------------------------------------------------------
 // throws EXIT_FAILURE if could not open the port
 void
-parse_commandline(int argc, char **argv, char *&uart_name, int &baudrate)
+parse_commandline(int argc, char **argv, char *&uart_name, int &baudrate, long *latitude, long *longitude, long *altitude)
 {
 
 	// string for command line usage
@@ -312,6 +319,39 @@ parse_commandline(int argc, char **argv, char *&uart_name, int &baudrate)
 				throw EXIT_FAILURE;
 			}
 		}
+
+        // latitude
+        if (strcmp(argv[i], "-lat") == 0 || strcmp(argv[i], "--latitude") == 0) {
+            if (argc > i + 1) {
+                *latitude = atol(argv[i + 1]);
+
+            } else {
+                printf("%s\n",commandline_usage);
+                throw EXIT_FAILURE;
+            }
+        }
+
+        // longitude
+        if (strcmp(argv[i], "-lon") == 0 || strcmp(argv[i], "--longitude") == 0) {
+            if (argc > i + 1) {
+                *longitude = atol(argv[i + 1]);
+
+            } else {
+                printf("%s\n",commandline_usage);
+                throw EXIT_FAILURE;
+            }
+        }
+
+        //altitude
+        if (strcmp(argv[i], "-alt") == 0 || strcmp(argv[i], "--altitude") == 0) {
+            if (argc > i + 1) {
+                *altitude = atol(argv[i + 1]);
+
+            } else {
+                printf("%s\n",commandline_usage);
+                throw EXIT_FAILURE;
+            }
+        }
 
 	}
 	// end: for each input argument
